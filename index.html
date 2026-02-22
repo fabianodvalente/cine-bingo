@@ -3,71 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cine Bingo - Versão Cartela</title>
+    <title>Cine Bingo Pro</title>
     <style>
-        :root {
-            --primary: #121212;
-            --secondary: #e50914;
-            --correct: #27ae60;
-            --wrong: #c0392b;
-            --text: #ffffff;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--primary); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        #game-container { max-width: 500px; width: 100%; text-align: center; }
-        h1 { margin-bottom: 5px; }
-        #movie-display { font-size: 1.5rem; font-weight: bold; margin: 20px 0; background: #222; padding: 15px; border-radius: 8px; border-left: 5px solid var(--secondary); }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
-        .cell { background: #2a2a2a; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 5px; cursor: pointer; border-radius: 4px; transition: 0.2s; text-align: center; font-weight: 500; border: 1px solid #444; }
-        .cell.correct { background: var(--correct); color: white; cursor: default; border-color: #1e8449; }
-        .cell.wrong { background: var(--wrong); }
-        .controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-        button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; transition: 0.3s; }
+        :root { --primary: #121212; --secondary: #e50914; --correct: #27ae60; --wrong: #c0392b; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--primary); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        #game-container { max-width: 450px; width: 100%; text-align: center; }
+        #movie-display { font-size: 1.4rem; font-weight: bold; margin: 15px 0; background: #222; padding: 20px; border-radius: 10px; border: 1px solid #333; min-height: 60px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 15px; }
+        .cell { background: #2a2a2a; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; padding: 4px; cursor: pointer; border-radius: 6px; transition: 0.2s; text-align: center; font-weight: bold; border: 1px solid #444; line-height: 1.1; }
+        .cell.correct { background: var(--correct); border-color: #1e8449; cursor: default; }
+        .cell.wrong { background: var(--wrong); animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; }
         #skip-btn { background: #444; color: white; }
         #wildcard-btn { background: #f1c40f; color: black; }
-        #status { margin-top: 20px; font-size: 0.9rem; color: #888; }
+        #status { margin-top: 15px; font-size: 0.85rem; color: #aaa; background: #1a1a1a; padding: 10px; border-radius: 20px; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <h1>CINE BINGO 🎬</h1>
-    <p style="color: #888; font-size: 0.9rem;">Complete a grade de 16 características!</p>
+    <h2 style="margin: 10px 0 5px 0;">CINE BINGO 🎬</h2>
+    <div id="status">Filme <span id="current-idx">1</span>/40 | Acertos: <span id="score">0</span>/16</div>
     
     <div id="movie-display">Carregando...</div>
     
     <div class="grid" id="bingo-grid"></div>
 
     <div class="controls">
-        <button id="skip-btn" onclick="skipMovie()">Pular Filme (Skip)</button>
+        <button id="skip-btn" onclick="skipMovie()">Pular (Skip)</button>
         <button id="wildcard-btn" onclick="useWildcard()">Wildcard ✨</button>
     </div>
-    
-    <div id="status">Filme atual: <span id="current-idx">1</span> | Acertos: <span id="score">0</span>/16</div>
 </div>
 
 <script>
+    // LISTA DE FILMES (40 filmes: alguns servem para o bingo, outros são distratores)
     const movies = [
-        { title: "Oppenheimer", attributes: ["Christopher Nolan", "Oscar Melhor Filme", "Década de 2020", "Cillian Murphy", "EUA", "Baseado em Fatos"] },
-        { title: "Cidade de Deus", attributes: ["Fernando Meirelles", "Brasil", "Década de 2000", "Baseado em Fatos", "Crime"] },
-        { title: "Pulp Fiction", attributes: ["Quentin Tarantino", "Anos 90", "Palma de Ouro", "Samuel L. Jackson", "EUA"] },
-        { title: "Parasita", attributes: ["Bong Joon-ho", "Coreia do Sul", "Oscar Melhor Filme", "Suspense", "Década de 2010"] },
-        { title: "O Auto da Compadecida", attributes: ["Brasil", "Comédia", "Anos 2000", "Matheus Nachtergaele"] },
-        { title: "Mad Max: Estrada da Fúria", attributes: ["Ficção Científica", "Austrália", "Década de 2010", "Tom Hardy"] }
+        { title: "Oppenheimer", attrs: ["Christopher Nolan", "EUA", "Década de 2020", "Venceu Oscar Melhor Filme"] },
+        { title: "Tudo em Todo Lugar ao Mesmo Tempo", attrs: ["EUA", "Década de 2020", "Venceu Oscar Melhor Filme"] },
+        { title: "Cidade de Deus", attrs: ["Brasil", "Década de 2000", "Baseado em Fatos Reais"] },
+        { title: "Bacurau", attrs: ["Brasil", "Década de 2010"] },
+        { title: "O Fabuloso Destino de Amélie Poulain", attrs: ["França", "Década de 2000"] }, // Distrator parcial
+        { title: "Pulp Fiction", attrs: ["Quentin Tarantino", "Anos 90", "Venceu Palma de Oro", "EUA"] },
+        { title: "Batman: O Cavaleiro das Trevas", attrs: ["Christopher Nolan", "Década de 2000", "EUA"] },
+        { title: "O Poderoso Chefão", attrs: ["Venceu Oscar Melhor Filme", "EUA"] },
+        { title: "Parasita", attrs: ["Coreia do Sul", "Década de 2010", "Venceu Oscar Melhor Filme", "Venceu Palma de Oro"] },
+        { title: "Central do Brasil", attrs: ["Brasil", "Anos 90", "Fernanda Montenegro"] },
+        // --- DISTRATORES (Filmes que provavelmente não batem com a grade fixa) ---
+        { title: "Sharknado", attrs: [] }, 
+        { title: "A Lagoa Azul", attrs: [] },
+        { title: "The Room (Tommy Wiseau)", attrs: [] },
+        // --- MAIS FILMES ---
+        { title: "Bastardos Inglórios", attrs: ["Quentin Tarantino", "Década de 2000"] },
+        { title: "Interestelar", attrs: ["Christopher Nolan", "Década de 2010"] },
+        { title: "Roma", attrs: ["México", "Década de 2010"] },
+        { title: "Oldboy", attrs: ["Coreia do Sul", "Década de 2000"] },
+        { title: "O Auto da Compadecida", attrs: ["Brasil", "Década de 2000"] },
+        { title: "O Menino e o Mundo", attrs: ["Brasil", "Animação"] },
+        { title: "Matrix", attrs: ["Anos 90", "Ficção Científica", "EUA"] },
+        { title: "Era Uma Vez em... Hollywood", attrs: ["Quentin Tarantino", "Década de 2010"] },
+        { title: "Dunkirk", attrs: ["Christopher Nolan", "Década de 2010"] },
+        { title: "Cães de Aluguel", attrs: ["Quentin Tarantino", "EUA"] },
+        { title: "A Vida é Bela", attrs: ["Itália", "Anos 90"] },
+        { title: "Moonlight", attrs: ["Venceu Oscar Melhor Filme", "Década de 2010"] },
+        { title: "Minari", attrs: ["EUA", "Década de 2020"] },
+        { title: "Portrait of a Lady on Fire", attrs: ["França", "Década de 2010"] },
+        { title: "Carandiru", attrs: ["Brasil", "Década de 2000", "Baseado em Fatos Reais"] },
+        { title: "Bingo: O Rei das Manhãs", attrs: ["Brasil", "Década de 2010"] },
+        { title: "Drive My Car", attrs: ["Japão", "Década de 2020"] },
+        { title: "Titanic", attrs: ["Venceu Oscar Melhor Filme", "Anos 90", "EUA"] },
+        { title: "Jurassic Park", attrs: ["Anos 90", "EUA"] },
+        { title: "O Grande Hotel Budapeste", attrs: ["Década de 2010"] },
+        { title: "Nomadland", attrs: ["Venceu Oscar Melhor Filme", "Década de 2020"] },
+        { title: "O Segundo Sol", attrs: [] }, // Distrator
+        { title: "Velozes e Furiosos 10", attrs: ["Década de 2020"] },
+        { title: "Barbie", attrs: ["EUA", "Década de 2020"] },
+        { title: "Blade Runner 2049", attrs: ["Década de 2010"] },
+        { title: "O Irlandês", attrs: ["Década de 2010", "EUA", "Baseado em Fatos Reais"] },
+        { title: "Marte Um", attrs: ["Brasil", "Década de 2020"] }
     ];
 
-    // Estas 16 opções formarão a sua cartela fixa para esta partida
-    const gridAttributes = ["Christopher Nolan", "Oscar Melhor Filme", "Brasil", "Anos 90", "Crime", "EUA", "Baseado em Fatos", "Quentin Tarantino", "Década de 2020", "Palma de Ouro", "Coreia do Sul", "Suspense", "Comédia", "Anos 2000", "Década de 2010", "Cillian Murphy"];
+    // CARACTERÍSTICAS DA GRADE FIXA
+    const gridAttributes = [
+        "Christopher Nolan", "Venceu Oscar Melhor Filme", "Brasil", "Anos 90", 
+        "EUA", "Quentin Tarantino", "Década de 2000", "Década de 2010", 
+        "Década de 2020", "Venceu Palma de Oro", "Coreia do Sul", "Baseado em Fatos Reais",
+        "França", "Animação", "Fernanda Montenegro", "Ficção Científica"
+    ];
 
     let currentIndex = 0;
     let score = 0;
     let wildcardUsed = false;
 
     function initGame() {
-        renderGrid(); // Cria a cartela apenas uma vez
-        updateMovie();
-    }
-
-    function renderGrid() {
         const grid = document.getElementById('bingo-grid');
         grid.innerHTML = '';
         gridAttributes.forEach(attr => {
@@ -78,42 +107,39 @@
             cell.onclick = () => checkAttribute(cell, attr);
             grid.appendChild(cell);
         });
+        updateMovie();
     }
 
     function updateMovie() {
         if (currentIndex >= movies.length) {
-            checkEndGame("A lista de filmes acabou! Tente novamente.");
+            checkEndGame(score === 16 ? "INCRÍVEL! BINGO COMPLETO!" : "FIM DE JOGO! A lista acabou.");
             return;
         }
-        const currentMovie = movies[currentIndex];
-        document.getElementById('movie-display').innerText = currentMovie.title;
+        document.getElementById('movie-display').innerText = movies[currentIndex].title;
         document.getElementById('current-idx').innerText = currentIndex + 1;
     }
 
     function checkAttribute(element, attr) {
-        if (element.classList.contains('correct')) return;
+        if (element.classList.contains('correct') || element.classList.contains('wrong')) return;
 
         const movie = movies[currentIndex];
-        if (movie.attributes.includes(attr)) {
+        if (movie.attrs.includes(attr)) {
             element.classList.add('correct');
             score++;
             document.getElementById('score').innerText = score;
-            
             if (score === 16) {
-                checkEndGame("BINGO! Você completou a cartela!");
+                setTimeout(() => checkEndGame("BINGO! Você é um mestre do cinema!"), 500);
             } else {
-                // Acertou: pula para o próximo filme
                 currentIndex++;
-                updateMovie();
+                setTimeout(updateMovie, 300);
             }
         } else {
             element.classList.add('wrong');
-            alert("ERRO! Esse filme não tem essa característica. Você perdeu o próximo filme!");
             setTimeout(() => {
                 element.classList.remove('wrong');
-                currentIndex += 2; // Penalidade: pula 2
+                currentIndex += 2; // Penalidade: pula o próximo
                 updateMovie();
-            }, 500);
+            }, 600);
         }
     }
 
@@ -124,38 +150,37 @@
 
     function useWildcard() {
         if (wildcardUsed) return;
-        
         const movie = movies[currentIndex];
-        let foundAny = false;
-
+        let found = false;
         gridAttributes.forEach(attr => {
-            if (movie.attributes.includes(attr)) {
+            if (movie.attrs.includes(attr)) {
                 const cell = document.getElementById("attr-" + attr.replace(/\s+/g, '-'));
                 if (!cell.classList.contains('correct')) {
                     cell.classList.add('correct');
                     score++;
-                    foundAny = true;
+                    found = true;
                 }
             }
         });
-
-        if (foundAny) {
-            document.getElementById('score').innerText = score;
+        if (found) {
             wildcardUsed = true;
+            document.getElementById('score').innerText = score;
             document.getElementById('wildcard-btn').style.opacity = "0.3";
             document.getElementById('wildcard-btn').innerText = "USADO";
-            
-            if (score === 16) {
-                checkEndGame("BINGO com Wildcard!");
-            } else {
-                currentIndex++;
-                updateMovie();
-            }
+            currentIndex++;
+            updateMovie();
+        } else {
+            alert("Este filme não tem nenhuma característica da grade! O Wildcard não foi gasto.");
         }
     }
 
     function checkEndGame(message) {
-        document.getElementById('game-container').innerHTML = `<h2>${message}</h2><p>Você marcou ${score} de 16 pontos.</p><button onclick="location.reload()" style="background:var(--secondary); color:white;">Jogar Novamente</button>`;
+        document.getElementById('game-container').innerHTML = `
+            <div style="background:#222; padding:30px; border-radius:15px; border:2px solid var(--secondary);">
+                <h2>${message}</h2>
+                <p style="font-size:1.2rem;">Você marcou <strong>${score}</strong> de 16 pontos.</p>
+                <button onclick="location.reload()" style="background:var(--secondary); color:white; width:100%; margin-top:20px;">JOGAR NOVAMENTE</button>
+            </div>`;
     }
 
     initGame();
