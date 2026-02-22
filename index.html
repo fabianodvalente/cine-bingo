@@ -3,131 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cine Bingo</title>
+    <title>Cine Bingo - Versão Cartela</title>
     <style>
         :root {
-            --primary: #1a1a1a;
-            --secondary: #e50914; /* Vermelho Netflix */
-            --correct: #2ecc71;
+            --primary: #121212;
+            --secondary: #e50914;
+            --correct: #27ae60;
             --wrong: #c0392b;
             --text: #ffffff;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--primary); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--primary); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; }
         #game-container { max-width: 500px; width: 100%; text-align: center; }
-        #movie-display { font-size: 1.8rem; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid var(--secondary); padding-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .cell { background: #333; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; padding: 5px; cursor: pointer; border-radius: 5px; transition: 0.3s; text-align: center; }
-        .cell:hover { background: #444; }
-        .cell.correct { background: var(--correct); pointer-events: none; }
+        h1 { margin-bottom: 5px; }
+        #movie-display { font-size: 1.5rem; font-weight: bold; margin: 20px 0; background: #222; padding: 15px; border-radius: 8px; border-left: 5px solid var(--secondary); }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+        .cell { background: #2a2a2a; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 5px; cursor: pointer; border-radius: 4px; transition: 0.2s; text-align: center; font-weight: 500; border: 1px solid #444; }
+        .cell.correct { background: var(--correct); color: white; cursor: default; border-color: #1e8449; }
         .cell.wrong { background: var(--wrong); }
-        .controls { display: flex; gap: 10px; justify-content: center; }
-        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
-        #skip-btn { background: #555; color: white; }
-        #wildcard-btn { background: gold; color: black; }
-        #status { margin-top: 15px; color: #aaa; }
+        .controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+        button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; transition: 0.3s; }
+        #skip-btn { background: #444; color: white; }
+        #wildcard-btn { background: #f1c40f; color: black; }
+        #status { margin-top: 20px; font-size: 0.9rem; color: #888; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <h1>CINE BINGO 🎬</h1>
-    <div id="movie-display">Carregando filme...</div>
+    <p style="color: #888; font-size: 0.9rem;">Complete a grade de 16 características!</p>
     
-    <div class="grid" id="bingo-grid">
-        </div>
+    <div id="movie-display">Carregando...</div>
+    
+    <div class="grid" id="bingo-grid"></div>
 
     <div class="controls">
-        <button id="skip-btn" onclick="skipMovie()">Pular (Skip)</button>
+        <button id="skip-btn" onclick="skipMovie()">Pular Filme (Skip)</button>
         <button id="wildcard-btn" onclick="useWildcard()">Wildcard ✨</button>
     </div>
     
-    <div id="status">Filme <span id="current-idx">1</span> de <span id="total-movies">...</span></div>
+    <div id="status">Filme atual: <span id="current-idx">1</span> | Acertos: <span id="score">0</span>/16</div>
 </div>
 
 <script>
-    // Base de dados manual para o protótipo
     const movies = [
-        { title: "Oppenheimer", attributes: ["Christopher Nolan", "Oscar Melhor Filme", "Década de 2020", "Cillian Murphy"] },
-        { title: "Cidade de Deus", attributes: ["Fernando Meirelles", "Brasil", "Década de 2000", "Baseado em Fatos"] },
-        { title: "Pulp Fiction", attributes: ["Quentin Tarantino", "Anos 90", "Palma de Ouro", "Samuel L. Jackson"] },
-        { title: "Parasita", attributes: ["Bong Joon-ho", "Coreia do Sul", "Oscar Melhor Filme", "Suspense"] }
+        { title: "Oppenheimer", attributes: ["Christopher Nolan", "Oscar Melhor Filme", "Década de 2020", "Cillian Murphy", "EUA", "Baseado em Fatos"] },
+        { title: "Cidade de Deus", attributes: ["Fernando Meirelles", "Brasil", "Década de 2000", "Baseado em Fatos", "Crime"] },
+        { title: "Pulp Fiction", attributes: ["Quentin Tarantino", "Anos 90", "Palma de Ouro", "Samuel L. Jackson", "EUA"] },
+        { title: "Parasita", attributes: ["Bong Joon-ho", "Coreia do Sul", "Oscar Melhor Filme", "Suspense", "Década de 2010"] },
+        { title: "O Auto da Compadecida", attributes: ["Brasil", "Comédia", "Anos 2000", "Matheus Nachtergaele"] },
+        { title: "Mad Max: Estrada da Fúria", attributes: ["Ficção Científica", "Austrália", "Década de 2010", "Tom Hardy"] }
     ];
 
-    // Lista global de possíveis características para a grade
-    const allAttributes = ["Christopher Nolan", "Oscar Melhor Filme", "Brasil", "Anos 90", "Terror", "Animação", "Preto e Branco", "Musical", "Quentin Tarantino", "Década de 2020", "EUA", "França", "Bong Joon-ho", "Cillian Murphy", "Samuel L. Jackson", "Palma de Ouro"];
+    // Estas 16 opções formarão a sua cartela fixa para esta partida
+    const gridAttributes = ["Christopher Nolan", "Oscar Melhor Filme", "Brasil", "Anos 90", "Crime", "EUA", "Baseado em Fatos", "Quentin Tarantino", "Década de 2020", "Palma de Ouro", "Coreia do Sul", "Suspense", "Comédia", "Anos 2000", "Década de 2010", "Cillian Murphy"];
 
     let currentIndex = 0;
+    let score = 0;
     let wildcardUsed = false;
 
     function initGame() {
-        if (currentIndex >= movies.length) {
-            document.getElementById('game-container').innerHTML = "<h2>Fim de Jogo! Parabéns Cinéfilo.</h2>";
-            return;
-        }
-        
-        const currentMovie = movies[currentIndex];
-        document.getElementById('movie-display').innerText = currentMovie.title;
-        document.getElementById('current-idx').innerText = currentIndex + 1;
-        document.getElementById('total-movies').innerText = movies.length;
-        
-        renderGrid();
+        renderGrid(); // Cria a cartela apenas uma vez
+        updateMovie();
     }
 
     function renderGrid() {
         const grid = document.getElementById('bingo-grid');
         grid.innerHTML = '';
-        
-        // Mistura as opções para cada rodada
-        allAttributes.sort(() => Math.random() - 0.5);
-
-        allAttributes.forEach(attr => {
+        gridAttributes.forEach(attr => {
             const cell = document.createElement('div');
             cell.className = 'cell';
             cell.innerText = attr;
+            cell.id = "attr-" + attr.replace(/\s+/g, '-');
             cell.onclick = () => checkAttribute(cell, attr);
             grid.appendChild(cell);
         });
     }
 
+    function updateMovie() {
+        if (currentIndex >= movies.length) {
+            checkEndGame("A lista de filmes acabou! Tente novamente.");
+            return;
+        }
+        const currentMovie = movies[currentIndex];
+        document.getElementById('movie-display').innerText = currentMovie.title;
+        document.getElementById('current-idx').innerText = currentIndex + 1;
+    }
+
     function checkAttribute(element, attr) {
+        if (element.classList.contains('correct')) return;
+
         const movie = movies[currentIndex];
         if (movie.attributes.includes(attr)) {
             element.classList.add('correct');
-            // Logica: Se acertou, vai para o próximo filme
-            setTimeout(() => { currentIndex++; initGame(); }, 800);
+            score++;
+            document.getElementById('score').innerText = score;
+            
+            if (score === 16) {
+                checkEndGame("BINGO! Você completou a cartela!");
+            } else {
+                // Acertou: pula para o próximo filme
+                currentIndex++;
+                updateMovie();
+            }
         } else {
             element.classList.add('wrong');
-            // Logica: Errou? Pula o próximo (pula 2)
-            alert("ERROU! Você perdeu o próximo filme da lista.");
-            setTimeout(() => { currentIndex += 2; initGame(); }, 800);
+            alert("ERRO! Esse filme não tem essa característica. Você perdeu o próximo filme!");
+            setTimeout(() => {
+                element.classList.remove('wrong');
+                currentIndex += 2; // Penalidade: pula 2
+                updateMovie();
+            }, 500);
         }
     }
 
     function skipMovie() {
         currentIndex++;
-        initGame();
+        updateMovie();
     }
 
     function useWildcard() {
-        if (wildcardUsed) {
-            alert("Wildcard já utilizado!");
-            return;
-        }
-        const cells = document.querySelectorAll('.cell');
-        const movie = movies[currentIndex];
+        if (wildcardUsed) return;
         
-        cells.forEach(cell => {
-            if (movie.attributes.includes(cell.innerText)) {
-                cell.classList.add('correct');
+        const movie = movies[currentIndex];
+        let foundAny = false;
+
+        gridAttributes.forEach(attr => {
+            if (movie.attributes.includes(attr)) {
+                const cell = document.getElementById("attr-" + attr.replace(/\s+/g, '-'));
+                if (!cell.classList.contains('correct')) {
+                    cell.classList.add('correct');
+                    score++;
+                    foundAny = true;
+                }
             }
         });
-        wildcardUsed = true;
-        document.getElementById('wildcard-btn').style.opacity = "0.5";
-        setTimeout(() => { currentIndex++; initGame(); }, 1500);
+
+        if (foundAny) {
+            document.getElementById('score').innerText = score;
+            wildcardUsed = true;
+            document.getElementById('wildcard-btn').style.opacity = "0.3";
+            document.getElementById('wildcard-btn').innerText = "USADO";
+            
+            if (score === 16) {
+                checkEndGame("BINGO com Wildcard!");
+            } else {
+                currentIndex++;
+                updateMovie();
+            }
+        }
+    }
+
+    function checkEndGame(message) {
+        document.getElementById('game-container').innerHTML = `<h2>${message}</h2><p>Você marcou ${score} de 16 pontos.</p><button onclick="location.reload()" style="background:var(--secondary); color:white;">Jogar Novamente</button>`;
     }
 
     initGame();
 </script>
-
 </body>
 </html>
