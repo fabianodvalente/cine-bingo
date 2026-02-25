@@ -3,86 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cine Bingo - Versão Crítica</title>
+    <title>Cine Bingo - Rigor Técnico</title>
     <style>
-        :root { --primary: #0f0f0f; --secondary: #d4a017; --correct: #1b5e20; --wrong: #b71c1c; --text: #e0e0e0; }
-        body { font-family: 'Georgia', serif; background: var(--primary); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        :root { --primary: #0a0a0a; --secondary: #c9ada7; --correct: #2d6a4f; --wrong: #a4133c; --text: #f8f9fa; }
+        body { font-family: 'Courier New', Courier, monospace; background: var(--primary); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
         #game-container { max-width: 450px; width: 100%; text-align: center; }
-        #movie-display { font-size: 1.3rem; font-weight: bold; margin: 20px 0; background: #1a1a1a; padding: 25px; border-radius: 4px; border: 1px solid #333; min-height: 50px; display: flex; align-items: center; justify-content: center; letter-spacing: 1px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
-        .cell { background: #222; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; padding: 6px; cursor: pointer; border-radius: 2px; transition: 0.3s; text-align: center; border: 1px solid #333; line-height: 1.2; text-transform: uppercase; }
-        .cell.correct { background: var(--correct); border-color: #2e7d32; cursor: default; }
+        #movie-display { font-size: 1.2rem; font-weight: bold; margin: 20px 0; background: #161616; padding: 25px; border: 1px solid #333; min-height: 40px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 2px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .cell { background: #1a1a1a; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; padding: 5px; cursor: pointer; border: 1px solid #444; transition: 0.2s; text-align: center; font-weight: bold; }
+        .cell.correct { background: var(--correct); border-color: #40916c; cursor: default; }
         .cell.wrong { background: var(--wrong); }
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        button { padding: 15px; cursor: pointer; border: 1px solid #444; border-radius: 4px; font-weight: bold; font-family: 'Arial', sans-serif; background: #222; color: white; }
-        #skip-btn:hover { background: #333; }
-        #wildcard-btn { color: var(--secondary); border-color: var(--secondary); }
-        #status { margin-top: 20px; font-size: 0.8rem; color: #666; text-transform: uppercase; }
+        button { padding: 15px; cursor: pointer; border: 1px solid #666; background: transparent; color: white; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; }
+        #wildcard-btn { color: #ffd700; border-color: #ffd700; }
+        #status { margin-top: 20px; font-size: 0.75rem; color: #888; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <h1 style="font-weight: normal; letter-spacing: 4px;">CINE BINGO</h1>
-    <div id="status">Obra <span id="current-idx">1</span>/40 — Progresso: <span id="score">0</span>/16</div>
-    <div id="movie-display">CARREGANDO...</div>
+    <h1 style="font-weight: lighter;">CINE BINGO v3.0</h1>
+    <div id="status">OBRA <span id="current-idx">1</span>/40 — CARTELA: <span id="score">0</span>/16</div>
+    <div id="movie-display">...</div>
     <div class="grid" id="bingo-grid"></div>
     <div class="controls">
-        <button id="skip-btn" onclick="skipMovie()">SKIP / PRÓXIMO</button>
+        <button onclick="skipMovie()">SKIP</button>
         <button id="wildcard-btn" onclick="useWildcard()">WILDCARD ✨</button>
     </div>
 </div>
 
 <script>
-    // Critérios objetivos: Premiações, Décadas, Nacionalidade e Fatos Técnicos.
     const movies = [
-        { title: "Ouro Preto (Doc)", attrs: [] }, // Distrator
-        { title: "Anatomia de uma Queda", attrs: ["França", "Venceu Palma de Ouro", "Década de 2020"] },
+        { title: "Oppenheimer", attrs: ["EUA", "Venceu Oscar Melhor Filme", "Década de 2020", "Duração +150min"] },
+        { title: "Interestelar", attrs: ["EUA", "Duração +150min"] },
+        { title: "Blade Runner 2049", attrs: ["EUA", "Duração +150min"] },
+        { title: "Anatomia de uma Queda", attrs: ["França", "Venceu Palma de Ouro", "Década de 2020", "Coprodução Internacional"] },
         { title: "Vidas Secas", attrs: ["Brasil", "Preto e Branco", "Baseado em Livro"] },
-        { title: "Barbie", attrs: ["EUA", "Década de 2020"] },
-        { title: "O Sétimo Selo", attrs: ["Preto e Branco", "Direção: Ingmar Bergman"] },
-        { title: "Zona de Interesse", attrs: ["Venceu Oscar Filme Int.", "Década de 2020"] },
-        { title: "A Hora da Estrela", attrs: ["Brasil", "Baseado em Livro"] },
+        { title: "Roma", attrs: ["México", "Preto e Branco", "Estreia em Streaming", "Venceu Oscar Filme Int."] },
+        { title: "O Irlandês", attrs: ["EUA", "Duração +150min", "Estreia em Streaming"] },
+        { title: "Parasita", attrs: ["Venceu Palma de Ouro", "Venceu Oscar Melhor Filme", "Produção Asiática"] },
+        { title: "Bacurau", attrs: ["Brasil", "Coprodução Internacional", "Venceu Prêmio em Cannes"] },
+        { title: "Drive My Car", attrs: ["Produção Asiática", "Venceu Oscar Filme Int.", "Duração +150min"] },
+        { title: "A Paixão de Joana d'Arc", attrs: ["Preto e Branco", "França", "Cinema Mudo"] },
         { title: "The Room", attrs: [] }, // Distrator
-        { title: "Parasita", attrs: ["Venceu Palma de Ouro", "Venceu Oscar Melhor Filme"] },
-        { title: "Psicose", attrs: ["Preto e Branco", "Direção: Alfred Hitchcock"] },
-        { title: "Cidade de Deus", attrs: ["Brasil", "Baseado em Livro"] },
-        { title: "O Irlandês", attrs: ["Duração +150min", "EUA"] },
-        { title: "Tudo em Todo Lugar...", attrs: ["Venceu Oscar Melhor Filme", "EUA"] },
-        { title: "Deus e o Diabo na Terra do Sol", attrs: ["Brasil", "Preto e Branco"] },
-        { title: "Interestelar", attrs: ["Duração +150min", "EUA"] },
-        { title: "Pulp Fiction", attrs: ["Venceu Palma de Ouro", "EUA"] },
-        { title: "Noites de Cabíria", attrs: ["Venceu Oscar Filme Int.", "Preto e Branco"] },
-        { title: "Central do Brasil", attrs: ["Brasil", "Indicado Oscar Filme Int."] },
-        { title: "Era uma Vez em Hollywood", attrs: ["Duração +150min", "EUA"] },
+        { title: "Sharknado", attrs: [] }, // Distrator
+        { title: "Zona de Interesse", attrs: ["Venceu Oscar Filme Int.", "Coprodução Internacional", "Década de 2020"] },
         { title: "Morangos Silvestres", attrs: ["Preto e Branco", "Direção: Ingmar Bergman"] },
-        { title: "O Menino e o Mundo", attrs: ["Brasil", "Indicado Oscar Filme Int."] },
-        { title: "O Labirinto do Fauno", attrs: ["Venceu Oscar Filme Int."] },
-        { title: "O Lobo de Wall Street", attrs: ["Duração +150min", "EUA"] },
-        { title: "Drive My Car", attrs: ["Venceu Oscar Filme Int.", "Duração +150min"] },
-        { title: "Pixote: A Lei do Mais Fraco", attrs: ["Brasil"] },
-        { title: "Janela Indiscreta", attrs: ["Direção: Alfred Hitchcock", "EUA"] },
-        { title: "Titanic", attrs: ["Venceu Oscar Melhor Filme", "Duração +150min"] },
+        { title: "Central do Brasil", attrs: ["Brasil", "Indicado Oscar Filme Int."] },
+        { title: "Psicose", attrs: ["Preto e Branco", "Direção: Alfred Hitchcock", "EUA"] },
         { title: "O Auto da Compadecida", attrs: ["Brasil", "Baseado em Livro"] },
-        { title: "Um Corpo que Cai", attrs: ["Direção: Alfred Hitchcock"] },
-        { title: "Grande Sertão (2024)", attrs: ["Brasil", "Baseado em Livro"] },
+        { title: "Cidadão Kane", attrs: ["Preto e Branco", "EUA"] },
+        { title: "O Menino e o Mundo", attrs: ["Brasil", "Indicado Oscar Filme Int."] },
+        { title: "Pulp Fiction", attrs: ["Venceu Palma de Ouro", "EUA"] },
+        { title: "O Sétimo Selo", attrs: ["Preto e Branco", "Direção: Ingmar Bergman"] },
         { title: "A Grande Beleza", attrs: ["Venceu Oscar Filme Int."] },
-        { title: "Blade Runner", attrs: ["EUA"] },
-        { title: "Metrópolis", attrs: ["Preto e Branco"] },
-        { title: "Dogville", attrs: ["Duração +150min"] },
-        { title: "Romeu + Julieta", attrs: ["Baseado em Livro"] },
-        { title: "Velozes e Furiosos 10", attrs: ["Década de 2020"] },
-        { title: "Amarelo Manga", attrs: ["Brasil"] },
+        { title: "Tudo em Todo Lugar...", attrs: ["Venceu Oscar Melhor Filme", "EUA", "Década de 2020"] },
         { title: "Persona", attrs: ["Preto e Branco", "Direção: Ingmar Bergman"] },
-        { title: "Clube da Luta", attrs: ["Baseado em Livro", "EUA"] },
-        { title: "A Paixão de Joana d'Arc", attrs: ["Preto e Branco"] }
+        { title: "Moonlight", attrs: ["Venceu Oscar Melhor Filme", "EUA"] },
+        { title: "Marte Um", attrs: ["Brasil", "Década de 2020"] },
+        { title: "Oldboy", attrs: ["Produção Asiática"] },
+        { title: "Janela Indiscreta", attrs: ["Direção: Alfred Hitchcock", "EUA"] },
+        { title: "Titanic", attrs: ["Venceu Oscar Melhor Filme", "Duração +150min", "EUA"] },
+        { title: "Metrópolis", attrs: ["Preto e Branco", "Cinema Mudo"] },
+        { title: "Limiar", attrs: ["Brasil"] },
+        { title: "Retrato de uma Jovem em Chamas", attrs: ["França", "Venceu Prêmio em Cannes"] },
+        { title: "O Lobo de Wall Street", attrs: ["EUA", "Duração +150min"] },
+        { title: "Um Corpo que Cai", attrs: ["Direção: Alfred Hitchcock", "EUA"] },
+        { title: "Nada de Novo no Front (2022)", attrs: ["Venceu Oscar Filme Int.", "Estreia em Streaming", "Baseado em Livro"] },
+        { title: "A Garota no Trem", attrs: ["Baseado em Livro"] },
+        { title: "Dona Flor e Seus Dois Maridos", attrs: ["Brasil", "Baseado em Livro"] },
+        { title: "A Doce Vida", attrs: ["Preto e Branco", "Venceu Palma de Ouro"] },
+        { title: "O Tempo que Resta", attrs: [] } // Distrator
     ];
 
     const gridAttributes = [
         "Brasil", "EUA", "França", "Preto e Branco",
         "Venceu Palma de Ouro", "Venceu Oscar Melhor Filme", "Venceu Oscar Filme Int.", "Indicado Oscar Filme Int.",
         "Década de 2020", "Duração +150min", "Baseado em Livro", "Direção: Ingmar Bergman",
-        "Direção: Alfred Hitchcock", "Produção Asiática", "Estreia em Cannes", "Cinema Mudo"
+        "Direção: Alfred Hitchcock", "Produção Asiática", "Venceu Prêmio em Cannes", "Estreia em Streaming"
     ];
 
     let currentIndex = 0;
@@ -105,10 +103,10 @@
 
     function updateMovie() {
         if (currentIndex >= movies.length) {
-            endGame(score === 16 ? "PARABÉNS. CONHECIMENTO VALIDADO." : "FIM DA LISTA. RESULTADO INSUFICIENTE.");
+            endGame(score === 16 ? "BINGO COMPLETO." : "LISTA ENCERRADA.");
             return;
         }
-        document.getElementById('movie-display').innerText = movies[currentIndex].title.toUpperCase();
+        document.getElementById('movie-display').innerText = movies[currentIndex].title;
         document.getElementById('current-idx').innerText = currentIndex + 1;
     }
 
@@ -120,7 +118,7 @@
             score++;
             document.getElementById('score').innerText = score;
             if (score === 16) {
-                setTimeout(() => endGame("BINGO! EXCELENTE PERCEPÇÃO."), 300);
+                setTimeout(() => endGame("BINGO."), 300);
             } else {
                 currentIndex++;
                 updateMovie();
@@ -164,7 +162,7 @@
     }
 
     function endGame(msg) {
-        document.getElementById('game-container').innerHTML = `<h2 style="letter-spacing:2px;">${msg}</h2><p>Você completou ${score}/16 da cartela.</p><button onclick="location.reload()">RECOMEÇAR</button>`;
+        document.getElementById('game-container').innerHTML = `<h2>${msg}</h2><p>${score}/16 ACERTOS</p><button onclick="location.reload()">REINICIAR</button>`;
     }
 
     initGame();
